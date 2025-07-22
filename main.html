@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>6D Hypercube Visualizer</title>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: black; }
+    canvas { display: block; }
+  </style>
+  <script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>
+</head>
+<body>
+  <script>
+    if (typeof THREE === 'undefined') {
+      alert('Failed to load Three.js. Check your internet connection or CDN availability.');
+    } else {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      camera.position.z = 20;
+
+      function createNode(x, y, z, color = 0xffffff) {
+        const geometry = new THREE.SphereGeometry(0.1, 12, 12);
+        const material = new THREE.MeshBasicMaterial({ color });
+        const sphere = new THREE.Mesh(geometry, material);
+        sphere.position.set(x, y, z);
+        scene.add(sphere);
+        return sphere;
+      }
+
+      function connect(p1, p2, color = 0x00ffff) {
+        const geometry = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+        const material = new THREE.LineBasicMaterial({ color });
+        const line = new THREE.Line(geometry, material);
+        scene.add(line);
+      }
+
+      const points = [];
+      for (let i = 0; i < 64; i++) {
+        const bits = i.toString(2).padStart(6, '0').split('').map(Number);
+        const x = (bits[0] + bits[3] * 0.5 - 1.25) * 3;
+        const y = (bits[1] + bits[4] * 0.5 - 1.25) * 3;
+        const z = (bits[2] + bits[5] * 0.5 - 1.25) * 3;
+        const p = new THREE.Vector3(x, y, z);
+        points.push(createNode(x, y, z));
+      }
+
+      for (let i = 0; i < 64; i++) {
+        for (let j = i + 1; j < 64; j++) {
+          const diff = i ^ j;
+          if ((diff & (diff - 1)) === 0) {
+            connect(points[i].position, points[j].position);
+          }
+        }
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        scene.rotation.y += 0.0025;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+  </script>
+</body>
+</html>

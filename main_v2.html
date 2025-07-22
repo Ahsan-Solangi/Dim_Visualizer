@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grinberg's Consciousness Theory - 6D Lattice Visualization</title>
+  <style>
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e);
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
+    canvas { display: block; }
+    
+    .controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #00ffff;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      z-index: 100;
+      min-width: 300px;
+    }
+    
+    .control-group {
+      margin-bottom: 15px;
+    }
+    
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #00ffff;
+      font-weight: bold;
+    }
+    
+    .slider {
+      width: 100%;
+      height: 5px;
+      border-radius: 5px;
+      background: #333;
+      outline: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    
+    .slider:hover {
+      opacity: 1;
+    }
+    
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #00ffff;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+    
+    .button {
+      background: linear-gradient(45deg, #00ffff, #0080ff);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      margin: 5px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    
+    .button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+    }
+    
+    .info-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #ff6b6b;
+      box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+      z-index: 100;
+      max-width: 350px;
+    }
+    
+    .theory-title {
+      color: #ff6b6b;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .theory-description {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #cccccc;
+    }
+    
+    .status-display {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #ffff00;
+      box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+      z-index: 100;
+    }
+    
+    .particle-count {
+      color: #ffff00;
+      font-weight: bold;
+    }
+    
+    .tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #00ffff;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 1000;
+      display: none;
+      max-width: 250px;
+    }
+    
+    .particle-legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #ff44ff;
+      box-shadow: 0 0 20px rgba(255, 68, 255, 0.3);
+      z-index: 100;
+      display: none;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+      font-size: 12px;
+    }
+    
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .dimension-info {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      border: 2px solid #00ffff;
+      text-align: center;
+      z-index: 1000;
+      display: none;
+      max-width: 400px;
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #ff6b6b;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  </style>
+  <script src="https://unpkg.com/three@0.150.1/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.150.1/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+  <div class="controls">
+    <h3 style="color: #00ffff; margin-top: 0;">Consciousness Field Controls</h3>
+    
+    <div class="control-group">
+      <label>Zoom Level</label>
+      <input type="range" id="zoomSlider" class="slider" min="5" max="100" value="20" step="1">
+      <span id="zoomValue">20</span>
+    </div>
+    
+    <div class="control-group">
+      <label>Rotation Speed</label>
+      <input type="range" id="rotationSlider" class="slider" min="0" max="0.02" value="0.0025" step="0.0005">
+      <span id="rotationValue">0.0025</span>
+    </div>
+    
+    <div class="control-group">
+      <label>Node Size</label>
+      <input type="range" id="nodeSizeSlider" class="slider" min="0.05" max="0.5" value="0.1" step="0.01">
+      <span id="nodeSizeValue">0.1</span>
+    </div>
+    
+    <div class="control-group">
+      <label>Time Speed</label>
+      <input type="range" id="timeSpeedSlider" class="slider" min="0.01" max="2" value="1" step="0.01">
+      <span id="timeSpeedValue">1.00</span>
+    </div>
+    
+    <div class="control-group">
+      <button class="button" id="resetView">Reset View</button>
+      <button class="button" id="toggleRotation">Pause Rotation</button>
+    </div>
+    
+    <div class="control-group">
+      <button class="button" id="toggleParticles">Show Particles</button>
+      <button class="button" id="focusMode">Focus Mode</button>
+      <button class="button" id="showDimensionInfo">6D Theory</button>
+    </div>
+    
+    <div class="control-group">
+      <button class="button" id="analyzeParticle">Analyze Particle</button>
+      <button class="button" id="traceConnections">Trace Paths</button>
+    </div>
+  </div>
+  
+  <div class="info-panel">
+    <div class="theory-title">Jacobo Grinberg's Consciousness Theory</div>
+    <div class="theory-description">
+      <strong>The Lattice Theory:</strong> Consciousness interacts with a universal energetic field (the "Lattice") to construct reality. This interaction unfolds across higher dimensions.
+      <br><br>
+      <strong>6D Hypercube Projection:</strong> We're visualizing a 6-dimensional hypercube (64 nodes) projected into 3D space using weighted combinations of binary coordinates.
+      <br><br>
+      <strong>Connection Logic:</strong> Points are connected if they differ by exactly one bit (Hamming distance = 1), representing quantum field interactions.
+      <br><br>
+      <strong>Particle Movement:</strong> Quantum particles move along lattice connections, representing consciousness field interactions.
+    </div>
+  </div>
+  
+  <div class="status-display">
+    <div class="particle-count">Lattice Nodes: 64</div>
+    <div>Connections: <span id="connectionCount">192</span></div>
+    <div>Dimension: 6D → 3D Projection</div>
+    <div>Field State: <span id="fieldState">Active</span></div>
+    <div>Active Particles: <span id="particleCount">0</span></div>
+  </div>
+
+  <div class="particle-legend" id="particleLegend">
+    <h4 style="color: #ff44ff; margin-top: 0;">Quantum Particles</h4>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #ff4444;"></div>
+      <span>Quark - Strong Force Carrier</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #4444ff;"></div>
+      <span>Electron - Electric Charge</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #ffff44;"></div>
+      <span>Photon - Light/EM Radiation</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #44ff44;"></div>
+      <span>Neutrino - Weak Interaction</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background-color: #ff44ff;"></div>
+      <span>Consciousness Field</span>
+    </div>
+  </div>
+
+  <div class="dimension-info" id="dimensionInfo">
+    <button class="close-btn" onclick="document.getElementById('dimensionInfo').style.display='none'">×</button>
+    <h3 style="color: #00ffff;">6-Dimensional Consciousness Theory</h3>
+    <p><strong>Grinberg's Projection Formula:</strong></p>
+    <p>x = (b₀ + b₃·0.5 - 1.25) × 3</p>
+    <p>y = (b₁ + b₄·0.5 - 1.25) × 3</p>
+    <p>z = (b₂ + b₅·0.5 - 1.25) × 3</p>
+    <p>Where b₀-b₅ are binary coordinates (0 or 1) representing the 6 dimensions of consciousness interaction with the universal lattice field.</p>
+    <p><strong>Hamming Distance Logic:</strong> Connections exist between nodes that differ by exactly one bit, representing quantum field transitions.</p>
+  </div>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <div class="analysis-panel" id="analysisPanel" style="
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #00ff00;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    z-index: 1000;
+    display: none;
+    max-width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+  ">
+    <button class="close-btn" onclick="document.getElementById('analysisPanel').style.display='none'">×</button>
+    <h3 style="color: #00ff00; margin-top: 0;">Particle Analysis</h3>
+    <div id="analysisContent"></div>
+  </div>
+
+  <script>
+    if (typeof THREE === 'undefined') {
+      alert('Failed to load Three.js. Check your internet connection or CDN availability.');
+    } else {
+      // Scene setup
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x000000, 0);
+      document.body.appendChild(renderer.domElement);
+
+      // Add OrbitControls for mouse interaction
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.enableZoom = true;
+      controls.enableRotate = true;
+      controls.enablePan = true;
+
+      camera.position.set(20, 20, 20);
+      controls.update();
+
+      // Global variables
+      let nodes = [];
+      let connections = [];
+      let particles = [];
+      let rotationSpeed = 0.0025;
+      let isRotating = true;
+      let showParticles = false;
+      let timeMultiplier = 1.0;
+      let focusMode = false;
+      let selectedParticle = null;
+      let tracePaths = false;
+      let pathTrails = [];
+
+      // Create hypercube nodes
+      function createNode(x, y, z, index) {
+        const geometry = new THREE.SphereGeometry(0.1, 16, 16);
+        const material = new THREE.MeshBasicMaterial({ 
+          color: new THREE.Color().setHSL((index / 64) * 0.8, 0.8, 0.6),
+          transparent: true,
+          opacity: 0.8
+        });
+        const sphere = new THREE.Mesh(geometry, material);
+        sphere.position.set(x, y, z);
+        sphere.userData = { index: index, originalColor: material.color.clone() };
+        scene.add(sphere);
+        return sphere;
+      }
+
+      // Create connection between two points
+      function createConnection(p1, p2, color = 0x00ffff) {
+        const geometry = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+        const material = new THREE.LineBasicMaterial({ 
+          color: color,
+          transparent: true,
+          opacity: 0.3
+        });
+        const line = new THREE.Line(geometry, material);
+        scene.add(line);
+        return line;
+      }
+
+      // Generate 6D hypercube
+      function generateHypercube() {
+        nodes = [];
+        connections = [];
+        
+        // Clear existing objects
+        scene.children = scene.children.filter(child => 
+          !(child instanceof THREE.Mesh && child.geometry instanceof THREE.SphereGeometry) &&
+          !(child instanceof THREE.Line)
+        );
+
+        const points = [];
+        
+        // Create 64 nodes (2^6)
+        for (let i = 0; i < 64; i++) {
+          const bits = i.toString(2).padStart(6, '0').split('').map(Number);
+          
+          // Grinberg's projection formula
+          const x = (bits[0] + bits[3] * 0.5 - 1.25) * 3;
+          const y = (bits[1] + bits[4] * 0.5 - 1.25) * 3;
+          const z = (bits[2] + bits[5] * 0.5 - 1.25) * 3;
+          
+          const node = createNode(x, y, z, i);
+          nodes.push(node);
+          points.push(new THREE.Vector3(x, y, z));
+        }
+
+        // Create connections (Hamming distance = 1)
+        let connectionCount = 0;
+        for (let i = 0; i < 64; i++) {
+          for (let j = i + 1; j < 64; j++) {
+            const diff = i ^ j;
+            // Check if exactly one bit differs
+            if ((diff & (diff - 1)) === 0) {
+              const connection = createConnection(points[i], points[j]);
+              connections.push(connection);
+              connectionCount++;
+            }
+          }
+        }
+        
+        document.getElementById('connectionCount').textContent = connectionCount;
+      }
+
+      // Control handlers
+      document.getElementById('zoomSlider').addEventListener('input', function(e) {
+        const zoom = parseFloat(e.target.value);
+        camera.position.setLength(zoom);
+        document.getElementById('zoomValue').textContent = zoom;
+      });
+
+      document.getElementById('rotationSlider').addEventListener('input', function(e) {
+        rotationSpeed = parseFloat(e.target.value);
+        document.getElementById('rotationValue').textContent = rotationSpeed;
+      });
+
+      document.getElementById('nodeSizeSlider').addEventListener('input', function(e) {
+        const size = parseFloat(e.target.value);
+        nodes.forEach(node => {
+          node.scale.setScalar(size / 0.1);
+        });
+        document.getElementById('nodeSizeValue').textContent = size;
+      });
+
+      document.getElementById('timeSpeedSlider').addEventListener('input', function(e) {
+        timeMultiplier = parseFloat(e.target.value);
+        document.getElementById('timeSpeedValue').textContent = timeMultiplier.toFixed(2);
+      });
+
+      document.getElementById('resetView').addEventListener('click', function() {
+        camera.position.set(20, 20, 20);
+        controls.reset();
+        scene.rotation.set(0, 0, 0);
+        focusMode = false;
+        selectedParticle = null;
+        document.getElementById('focusMode').textContent = 'Focus Mode';
+        document.getElementById('analysisPanel').style.display = 'none';
+      });
+
+      document.getElementById('toggleRotation').addEventListener('click', function() {
+        isRotating = !isRotating;
+        this.textContent = isRotating ? 'Pause Rotation' : 'Resume Rotation';
+        document.getElementById('fieldState').textContent = isRotating ? 'Active' : 'Paused';
+      });
+
+      document.getElementById('focusMode').addEventListener('click', function() {
+        focusMode = !focusMode;
+        this.textContent = focusMode ? 'Exit Focus' : 'Focus Mode';
+        
+        if (focusMode) {
+          // Zoom in and slow down time for detailed analysis
+          camera.position.setLength(10);
+          timeMultiplier = 0.3;
+          document.getElementById('timeSpeedSlider').value = 0.3;
+          document.getElementById('timeSpeedValue').textContent = '0.30';
+        } else {
+          camera.position.setLength(20);
+          timeMultiplier = 1.0;
+          document.getElementById('timeSpeedSlider').value = 1.0;
+          document.getElementById('timeSpeedValue').textContent = '1.00';
+        }
+      });
+
+      document.getElementById('analyzeParticle').addEventListener('click', function() {
+        if (particles.length > 0) {
+          selectedParticle = particles[Math.floor(Math.random() * particles.length)];
+          showParticleAnalysis(selectedParticle);
+          document.getElementById('analysisPanel').style.display = 'block';
+        }
+      });
+
+      document.getElementById('traceConnections').addEventListener('click', function() {
+        tracePaths = !tracePaths;
+        this.textContent = tracePaths ? 'Hide Traces' : 'Trace Paths';
+        
+        if (!tracePaths) {
+          // Clear existing trails
+          pathTrails.forEach(trail => scene.remove(trail));
+          pathTrails = [];
+        }
+      });
+
+      function showParticleAnalysis(particle) {
+        const userData = particle.userData;
+        const analysisContent = document.getElementById('analysisContent');
+        
+        analysisContent.innerHTML = `
+          <div style="color: #00ff00;">
+            <h4>${userData.name}</h4>
+            <p><strong>Type:</strong> ${userData.type}</p>
+            <p><strong>Current Progress:</strong> ${(userData.progress * 100).toFixed(1)}%</p>
+            <p><strong>Speed:</strong> ${userData.speed.toFixed(4)} units/frame</p>
+            <p><strong>Position:</strong> (${particle.position.x.toFixed(2)}, ${particle.position.y.toFixed(2)}, ${particle.position.z.toFixed(2)})</p>
+            <p><strong>Source Node:</strong> ${userData.startNode.userData.index}</p>
+            <p><strong>Target Node:</strong> ${userData.targetNode.userData.index}</p>
+            <p><strong>Path Distance:</strong> ${userData.startNode.position.distanceTo(userData.targetNode.position).toFixed(2)}</p>
+            <p><strong>Quantum State:</strong> ${Math.random() > 0.5 ? 'Superposition' : 'Collapsed'}</p>
+            <p><strong>Field Interaction:</strong> ${(Math.sin(Date.now() * 0.001) * 0.5 + 0.5).toFixed(3)}</p>
+          </div>
+        `;
+      }
+
+      document.getElementById('toggleParticles').addEventListener('click', function() {
+        showParticles = !showParticles;
+        this.textContent = showParticles ? 'Hide Particles' : 'Show Particles';
+        
+        if (showParticles) {
+          createParticleSystem();
+          document.getElementById('particleLegend').style.display = 'block';
+        } else {
+          removeParticleSystem();
+          document.getElementById('particleLegend').style.display = 'none';
+        }
+        
+        document.getElementById('particleCount').textContent = showParticles ? particles.length : 0;
+      });
+
+      document.getElementById('showDimensionInfo').addEventListener('click', function() {
+        document.getElementById('dimensionInfo').style.display = 'block';
+      });
+
+      // Mouse interaction for tooltips
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      const tooltip = document.getElementById('tooltip');
+
+      function onMouseMove(event) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        
+        // Check intersections with nodes
+        const nodeIntersects = raycaster.intersectObjects(nodes);
+        
+        if (nodeIntersects.length > 0) {
+          const node = nodeIntersects[0].object;
+          const index = node.userData.index;
+          const bits = index.toString(2).padStart(6, '0');
+          
+          tooltip.style.display = 'block';
+          tooltip.style.left = event.clientX + 10 + 'px';
+          tooltip.style.top = event.clientY + 10 + 'px';
+          tooltip.innerHTML = `
+            <strong>Lattice Node ${index}</strong><br>
+            Binary: ${bits}<br>
+            6D Coordinates: (${bits.split('').join(', ')})<br>
+            3D Position: (${node.position.x.toFixed(2)}, ${node.position.y.toFixed(2)}, ${node.position.z.toFixed(2)})<br>
+            Consciousness Field Intensity: ${(Math.sin(Date.now() * 0.001 + index) * 0.5 + 0.5).toFixed(2)}
+          `;
+        } else {
+          // Check intersections with particles
+          const particleIntersects = raycaster.intersectObjects(particles);
+          
+          if (particleIntersects.length > 0) {
+            const particle = particleIntersects[0].object;
+            const userData = particle.userData;
+            
+            tooltip.style.display = 'block';
+            tooltip.style.left = event.clientX + 10 + 'px';
+            tooltip.style.top = event.clientY + 10 + 'px';
+            tooltip.innerHTML = `
+              <strong>${userData.name}</strong><br>
+              Type: ${userData.type}<br>
+              Progress: ${(userData.progress * 100).toFixed(1)}%<br>
+              Speed: ${userData.speed.toFixed(3)}<br>
+              From Node: ${userData.startNode.userData.index}<br>
+              To Node: ${userData.targetNode.userData.index}
+            `;
+          } else {
+            tooltip.style.display = 'none';
+          }
+        }
+      }
+
+      renderer.domElement.addEventListener('mousemove', onMouseMove);
+
+      // Particle system
+      const particleTypes = {
+        quark: { color: 0xff4444, size: 0.03, speed: 0.02, name: 'Quark' },
+        electron: { color: 0x4444ff, size: 0.025, speed: 0.015, name: 'Electron' },
+        photon: { color: 0xffff44, size: 0.02, speed: 0.03, name: 'Photon' },
+        neutrino: { color: 0x44ff44, size: 0.015, speed: 0.025, name: 'Neutrino' },
+        consciousness: { color: 0xff44ff, size: 0.04, speed: 0.01, name: 'Consciousness Field' }
+      };
+
+      function createParticle(type, startNode, targetNode) {
+        const typeData = particleTypes[type];
+        const geometry = new THREE.SphereGeometry(typeData.size, 8, 8);
+        const material = new THREE.MeshBasicMaterial({ 
+          color: typeData.color,
+          transparent: true,
+          opacity: 0.8
+        });
+        
+        const particle = new THREE.Mesh(geometry, material);
+        particle.position.copy(startNode.position);
+        
+        particle.userData = {
+          type: type,
+          startNode: startNode,
+          targetNode: targetNode,
+          progress: 0,
+          speed: typeData.speed,
+          name: typeData.name
+        };
+        
+        scene.add(particle);
+        return particle;
+      }
+
+      function createParticleSystem() {
+        particles = [];
+        const particleCount = 20;
+        
+        for (let i = 0; i < particleCount; i++) {
+          const types = Object.keys(particleTypes);
+          const randomType = types[Math.floor(Math.random() * types.length)];
+          
+          const startIndex = Math.floor(Math.random() * nodes.length);
+          const targetIndex = Math.floor(Math.random() * nodes.length);
+          
+          if (startIndex !== targetIndex) {
+            const particle = createParticle(randomType, nodes[startIndex], nodes[targetIndex]);
+            particles.push(particle);
+          }
+        }
+      }
+
+      function removeParticleSystem() {
+        particles.forEach(particle => {
+          scene.remove(particle);
+        });
+        particles = [];
+      }
+
+      function updateParticles(deltaTime) {
+        particles.forEach(particle => {
+          const userData = particle.userData;
+          const oldPosition = particle.position.clone();
+          
+          userData.progress += userData.speed * deltaTime * timeMultiplier;
+          
+          if (userData.progress >= 1) {
+            // Particle reached target, find new target
+            userData.progress = 0;
+            userData.startNode = userData.targetNode;
+            
+            // Find connected nodes (Hamming distance 1)
+            const connectedNodes = [];
+            const startIndex = userData.startNode.userData.index;
+            
+            for (let i = 0; i < nodes.length; i++) {
+              const diff = startIndex ^ nodes[i].userData.index;
+              if ((diff & (diff - 1)) === 0 && diff !== 0) {
+                connectedNodes.push(nodes[i]);
+              }
+            }
+            
+            if (connectedNodes.length > 0) {
+              userData.targetNode = connectedNodes[Math.floor(Math.random() * connectedNodes.length)];
+            } else {
+              userData.targetNode = nodes[Math.floor(Math.random() * nodes.length)];
+            }
+          }
+          
+          // Interpolate position
+          particle.position.lerpVectors(
+            userData.startNode.position,
+            userData.targetNode.position,
+            userData.progress
+          );
+          
+          // Add some oscillation for visual effect
+          const time = Date.now() * 0.001;
+          const oscillation = Math.sin(time * 5 + particle.id) * 0.1;
+          particle.position.y += oscillation * timeMultiplier;
+          
+          // Create trail if tracing is enabled
+          if (tracePaths && oldPosition.distanceTo(particle.position) > 0.01) {
+            const trailGeometry = new THREE.BufferGeometry().setFromPoints([oldPosition, particle.position]);
+            const trailMaterial = new THREE.LineBasicMaterial({ 
+              color: particle.material.color,
+              transparent: true,
+              opacity: 0.5
+            });
+            const trail = new THREE.Line(trailGeometry, trailMaterial);
+            scene.add(trail);
+            pathTrails.push(trail);
+            
+            // Limit trail count to prevent performance issues
+            if (pathTrails.length > 200) {
+              const oldTrail = pathTrails.shift();
+              scene.remove(oldTrail);
+            }
+          }
+          
+          // Highlight selected particle
+          if (selectedParticle === particle) {
+            particle.scale.setScalar(1.5);
+            particle.material.opacity = 1.0;
+          } else {
+            particle.scale.setScalar(1.0);
+            particle.material.opacity = 0.8;
+          }
+        });
+      }
+
+      // Enhanced animation loop
+      let lastTime = 0;
+      function animate(currentTime) {
+        requestAnimationFrame(animate);
+        
+        const deltaTime = (currentTime - lastTime) * 0.001;
+        lastTime = currentTime;
+        
+        if (isRotating) {
+          scene.rotation.y += rotationSpeed * timeMultiplier;
+          scene.rotation.x += rotationSpeed * 0.3 * timeMultiplier;
+        }
+        
+        // Animate node colors
+        const time = Date.now() * 0.001 * timeMultiplier;
+        nodes.forEach((node, index) => {
+          const hue = (index / 64 + time * 0.1) % 1;
+          node.material.color.setHSL(hue * 0.8, 0.8, 0.6);
+          
+          // Pulse effect
+          const pulse = 1 + Math.sin(time * 2 + index * 0.1) * 0.2;
+          node.scale.setScalar(pulse * (parseFloat(document.getElementById('nodeSizeSlider').value) / 0.1));
+        });
+        
+        // Update particles
+        if (showParticles && particles.length > 0) {
+          updateParticles(deltaTime);
+        }
+        
+        // Animate connections
+        connections.forEach((connection, index) => {
+          const opacity = 0.3 + Math.sin(time * 3 + index * 0.2) * 0.2;
+          connection.material.opacity = opacity;
+        });
+        
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      // Initialize
+      generateHypercube();
+      animate();
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+  </script>
+</body>
+</html>
+
